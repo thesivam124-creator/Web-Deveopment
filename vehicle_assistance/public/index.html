@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RescuDrive - Roadside Breakdown Assistance</title>
+  <!-- Google Fonts & Font Awesome Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="logo">
+        <i class="fa-solid fa-truck-monster"></i>
+        <span>Rescu<strong>Drive</strong></span>
+        <span class="badge-emergency">24/7 Roadside Help</span>
+      </div>
+
+      <nav class="nav-tabs">
+        <button id="nav-user-btn" class="nav-tab active" onclick="switchPortal('user')">
+          <i class="fa-solid fa-car-side"></i> Vehicle Owner Portal
+        </button>
+        <button id="nav-tech-btn" class="nav-tab" onclick="switchPortal('technician')">
+          <i class="fa-solid fa-wrench"></i> Technician Portal
+        </button>
+      </nav>
+
+      <div class="user-auth-bar" id="auth-status-bar">
+        <!-- Dynamic Auth Button / Profile -->
+      </div>
+    </div>
+  </header>
+
+  <!-- Notification Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- MAIN CONTAINER -->
+  <main class="main-content">
+
+    <!-- ========================================== -->
+    <!-- 1. VEHICLE OWNER / USER PORTAL SECTION -->
+    <!-- ========================================== -->
+    <section id="portal-user" class="portal-section active">
+      
+      <!-- Hero Banner -->
+      <div class="hero-banner">
+        <div class="hero-content">
+          <span class="hero-tag"><i class="fa-solid fa-bolt"></i> Fast Response Mechanic Discovery</span>
+          <h1>Stranded on the Road? Find Nearby Technicians Now.</h1>
+          <p>Instantly view local verified mechanics with upfront pricing, arrival waiting times, skills, and vehicle compatibilities.</p>
+        </div>
+      </div>
+
+      <!-- User Active Request Alert Bar -->
+      <div id="user-active-request-bar" class="active-request-banner hidden">
+        <!-- Render active request tracking here -->
+      </div>
+
+      <!-- Location & Filters Control Bar -->
+      <div class="filter-card">
+        <div class="filter-header">
+          <h3><i class="fa-solid fa-location-crosshairs"></i> Your Current Location & Service Filters</h3>
+          <button class="btn-location" onclick="getUserLocation()">
+            <i class="fa-solid fa-location-arrow"></i> Use My GPS Location
+          </button>
+        </div>
+
+        <div class="filter-grid">
+          <!-- Location Input -->
+          <div class="filter-group">
+            <label><i class="fa-solid fa-map-pin"></i> Breakdown Location Address</label>
+            <input type="text" id="user-address-input" value="Rajiv Chowk, Central City" onchange="fetchTechnicians()">
+          </div>
+
+          <!-- Latitude & Longitude (Simulation) -->
+          <div class="filter-group duo-inputs">
+            <div>
+              <label>Latitude</label>
+              <input type="number" step="0.0001" id="user-lat-input" value="28.6139" onchange="fetchTechnicians()">
+            </div>
+            <div>
+              <label>Longitude</label>
+              <input type="number" step="0.0001" id="user-lng-input" value="77.2090" onchange="fetchTechnicians()">
+            </div>
+          </div>
+
+          <!-- Vehicle Type Filter -->
+          <div class="filter-group">
+            <label><i class="fa-solid fa-car"></i> Your Vehicle Type</label>
+            <select id="filter-vehicle-type" onchange="fetchTechnicians()">
+              <option value="All">All Vehicle Types</option>
+              <option value="Car / Sedan / SUV">🚗 Car / Sedan / SUV</option>
+              <option value="2-Wheeler">🏍️ 2-Wheeler (Motorcycle/Scooter)</option>
+              <option value="Truck / Bus">🚚 Truck / Bus / Heavy Vehicle</option>
+              <option value="Electric Vehicle (EV)">⚡ Electric Vehicle (EV)</option>
+            </select>
+          </div>
+
+          <!-- Skill Filter -->
+          <div class="filter-group">
+            <label><i class="fa-solid fa-screwdriver-wrench"></i> Required Repair Skill</label>
+            <select id="filter-skill" onchange="fetchTechnicians()">
+              <option value="All">All Skills & Issues</option>
+              <option value="Engine Repair">Engine Repair</option>
+              <option value="Flat Tire & Replacement">Flat Tire & Replacement</option>
+              <option value="Battery Jumpstart & Replace">Battery Jumpstart & Replace</option>
+              <option value="Towing Service">Towing Service</option>
+              <option value="Fuel Delivery">Fuel Delivery</option>
+              <option value="Brake & Clutch Repair">Brake & Clutch Repair</option>
+              <option value="Lockout Assistance">Lockout Assistance</option>
+              <option value="EV Charging & Diagnostics">EV Charging & Diagnostics</option>
+            </select>
+          </div>
+
+          <!-- Distance Slider -->
+          <div class="filter-group">
+            <label><i class="fa-solid fa-route"></i> Max Distance: <span id="dist-val">25</span> km</label>
+            <input type="range" id="filter-max-dist" min="2" max="50" value="25" oninput="document.getElementById('dist-val').innerText=this.value; fetchTechnicians();">
+          </div>
+
+          <!-- Max Charges Slider -->
+          <div class="filter-group">
+            <label><i class="fa-solid fa-indian-rupee-sign"></i> Max Charges: <span id="charge-val">₹2000</span></label>
+            <input type="range" id="filter-max-charges" min="200" max="3000" step="50" value="2000" oninput="document.getElementById('charge-val').innerText='₹' + this.value; fetchTechnicians();">
+          </div>
+        </div>
+      </div>
+
+      <!-- Technicians Section -->
+      <div class="technicians-header">
+        <h2><i class="fa-solid fa-user-gear"></i> Available Nearby Technicians (<span id="tech-count">0</span>)</h2>
+        <span class="sort-info"><i class="fa-solid fa-arrow-down-short-wide"></i> Sorted by Nearest Distance & Lowest ETA</span>
+      </div>
+
+      <!-- Technicians Grid Display -->
+      <div id="technicians-grid" class="tech-grid">
+        <!-- Dynamic Technician Cards Rendered via JS -->
+      </div>
+
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- 2. TECHNICIAN PORTAL SECTION -->
+    <!-- ========================================== -->
+    <section id="portal-technician" class="portal-section">
+      
+      <!-- Tech Welcome / Auth Panel -->
+      <div id="tech-unauth-view" class="auth-card-wrapper">
+        <div class="auth-card tech-auth">
+          <div class="auth-header">
+            <i class="fa-solid fa-wrench auth-icon"></i>
+            <h2>Technician Registration & Access Portal</h2>
+            <p>Register as a repair provider to showcase your location, skills, vehicle specialties, base fees, and waiting times to stranded drivers nearby.</p>
+          </div>
+
+          <div class="auth-toggle-btns">
+            <button id="tech-tab-login" class="active" onclick="toggleTechAuthMode('login')">Technician Login</button>
+            <button id="tech-tab-register" onclick="toggleTechAuthMode('register')">Register New Technician</button>
+          </div>
+
+          <!-- Technician Login Form -->
+          <form id="tech-login-form" onsubmit="handleTechLogin(event)">
+            <div class="form-group">
+              <label>Email Address</label>
+              <input type="email" id="tech-login-email" placeholder="e.g. rajesh@apexrescue.com" required>
+            </div>
+            <div class="form-group">
+              <label>Password</label>
+              <input type="password" id="tech-login-password" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn-primary full-width">
+              <i class="fa-solid fa-right-to-bracket"></i> Login to Technician Dashboard
+            </button>
+            <p class="demo-hint"><i class="fa-solid fa-lightbulb"></i> Demo Credentials: <code>rajesh@apexrescue.com</code> / <code>password123</code></p>
+          </form>
+
+          <!-- Technician Registration Form -->
+          <form id="tech-register-form" class="hidden" onsubmit="handleTechRegister(event)">
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label>Full Name *</label>
+                <input type="text" id="tech-reg-name" placeholder="e.g. Rajesh Sharma" required>
+              </div>
+              <div class="form-group">
+                <label>Email Address *</label>
+                <input type="email" id="tech-reg-email" placeholder="e.g. rajesh@apex.com" required>
+              </div>
+              <div class="form-group">
+                <label>Password *</label>
+                <input type="password" id="tech-reg-password" placeholder="••••••••" required>
+              </div>
+              <div class="form-group">
+                <label>Phone Number *</label>
+                <input type="text" id="tech-reg-phone" placeholder="+91 98765 43210" required>
+              </div>
+              <div class="form-group">
+                <label>Business / Garage Name</label>
+                <input type="text" id="tech-reg-business" placeholder="e.g. Apex Auto Rescue">
+              </div>
+              <div class="form-group">
+                <label>Base Service Charge (₹)</label>
+                <input type="number" id="tech-reg-basefee" placeholder="350" value="350" required>
+              </div>
+              <div class="form-group">
+                <label>Per Km Charge (₹)</label>
+                <input type="number" id="tech-reg-ratekm" placeholder="25" value="25" required>
+              </div>
+              <div class="form-group">
+                <label>Est. Wait / Response Time (Mins)</label>
+                <input type="number" id="tech-reg-waittime" placeholder="15" value="15" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Service Base Address</label>
+              <input type="text" id="tech-reg-address" placeholder="Connaught Place, Central Hub" required>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label>Base Latitude</label>
+                <input type="number" step="0.0001" id="tech-reg-lat" value="28.6315" required>
+              </div>
+              <div class="form-group">
+                <label>Base Longitude</label>
+                <input type="number" step="0.0001" id="tech-reg-lng" value="77.2167" required>
+              </div>
+            </div>
+
+            <!-- Skills Selection Checkboxes -->
+            <div class="form-group">
+              <label>Repair Skills Offered (Check all that apply):</label>
+              <div class="checkbox-grid">
+                <label class="cb-label"><input type="checkbox" name="tech-skills" value="Engine Repair" checked> Engine Repair</label>
+                <label class="cb-label"><input type="checkbox" name="tech-skills" value="Flat Tire & Replacement" checked> Flat Tire & Replacement</label>
+                <label class="cb-label"><input type="checkbox" name="tech-skills" value="Battery Jumpstart & Replace" checked> Battery Jumpstart & Replace</label>
+                <label class="cb-label"><input type="checkbox" name="tech-skills" value="Towing Service" checked> Towing Service</label>
+                <label class="cb-label"><input type="checkbox" name="tech-skills" value="Fuel Delivery"> Fuel Delivery</label>
+                <label class="cb-label"><input type="checkbox" name="tech-skills" value="Brake & Clutch Repair"> Brake & Clutch Repair</label>
+                <label class="cb-label"><input type="checkbox" name="tech-skills" value="Lockout Assistance"> Lockout Assistance</label>
+                <label class="cb-label"><input type="checkbox" name="tech-skills" value="EV Charging & Diagnostics"> EV Charging & Diagnostics</label>
+              </div>
+            </div>
+
+            <!-- Vehicle Types Checkboxes -->
+            <div class="form-group">
+              <label>Vehicles You Repair (Check all that apply):</label>
+              <div class="checkbox-grid">
+                <label class="cb-label"><input type="checkbox" name="tech-vehicles" value="2-Wheeler" checked> 🏍️ 2-Wheeler</label>
+                <label class="cb-label"><input type="checkbox" name="tech-vehicles" value="Car / Sedan / SUV" checked> 🚗 Car / Sedan / SUV</label>
+                <label class="cb-label"><input type="checkbox" name="tech-vehicles" value="Truck / Bus"> 🚚 Truck / Bus</label>
+                <label class="cb-label"><input type="checkbox" name="tech-vehicles" value="Electric Vehicle (EV)" checked> ⚡ Electric Vehicle (EV)</label>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-primary full-width">
+              <i class="fa-solid fa-user-plus"></i> Register & Create Technician Profile
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Technician Dashboard (Authenticated) -->
+      <div id="tech-dashboard-view" class="tech-dashboard hidden">
+        <div class="dash-header">
+          <div>
+            <span class="welcome-badge">Technician Control Panel</span>
+            <h1 id="dash-tech-name">Technician Dashboard</h1>
+            <p id="dash-tech-business">Business Name</p>
+          </div>
+          <div class="availability-card">
+            <label class="switch-label">
+              <span>Availability Status:</span>
+              <div class="toggle-switch">
+                <input type="checkbox" id="tech-availability-toggle" onchange="updateTechAvailability(this.checked)">
+                <span class="slider"></span>
+              </div>
+              <strong id="tech-avail-text" class="status-badge available">Online & Available</strong>
+            </label>
+            <button class="btn-secondary btn-sm" onclick="logoutTech()">Logout</button>
+          </div>
+        </div>
+
+        <!-- Dashboard Grid: Profile Settings & Incoming Calls -->
+        <div class="dash-grid">
+          
+          <!-- Column 1: Profile & Details Customizer -->
+          <div class="card dash-card">
+            <div class="card-title">
+              <h3><i class="fa-solid fa-sliders"></i> Profile & Service Settings</h3>
+            </div>
+            <form onsubmit="handleUpdateTechProfile(event)">
+              <div class="form-group">
+                <label>Business Name</label>
+                <input type="text" id="dash-edit-business">
+              </div>
+              <div class="form-group">
+                <label>Contact Phone</label>
+                <input type="text" id="dash-edit-phone">
+              </div>
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label>Base Fee (₹)</label>
+                  <input type="number" id="dash-edit-basefee">
+                </div>
+                <div class="form-group">
+                  <label>Per Km Rate (₹)</label>
+                  <input type="number" id="dash-edit-ratekm">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Base Arrival Wait Time (Mins)</label>
+                <input type="number" id="dash-edit-waittime">
+              </div>
+
+              <!-- Skills Checkboxes -->
+              <div class="form-group">
+                <label>Offered Skills:</label>
+                <div class="checkbox-grid compact">
+                  <label class="cb-label"><input type="checkbox" name="dash-skills" value="Engine Repair"> Engine Repair</label>
+                  <label class="cb-label"><input type="checkbox" name="dash-skills" value="Flat Tire & Replacement"> Flat Tire</label>
+                  <label class="cb-label"><input type="checkbox" name="dash-skills" value="Battery Jumpstart & Replace"> Battery</label>
+                  <label class="cb-label"><input type="checkbox" name="dash-skills" value="Towing Service"> Towing</label>
+                  <label class="cb-label"><input type="checkbox" name="dash-skills" value="Fuel Delivery"> Fuel</label>
+                  <label class="cb-label"><input type="checkbox" name="dash-skills" value="Brake & Clutch Repair"> Brake</label>
+                  <label class="cb-label"><input type="checkbox" name="dash-skills" value="Lockout Assistance"> Lockout</label>
+                  <label class="cb-label"><input type="checkbox" name="dash-skills" value="EV Charging & Diagnostics"> EV Diagnostic</label>
+                </div>
+              </div>
+
+              <!-- Vehicle Compatibility -->
+              <div class="form-group">
+                <label>Repairs Vehicles:</label>
+                <div class="checkbox-grid compact">
+                  <label class="cb-label"><input type="checkbox" name="dash-vehicles" value="2-Wheeler"> 🏍️ 2-Wheeler</label>
+                  <label class="cb-label"><input type="checkbox" name="dash-vehicles" value="Car / Sedan / SUV"> 🚗 Car</label>
+                  <label class="cb-label"><input type="checkbox" name="dash-vehicles" value="Truck / Bus"> 🚚 Truck</label>
+                  <label class="cb-label"><input type="checkbox" name="dash-vehicles" value="Electric Vehicle (EV)"> ⚡ EV</label>
+                </div>
+              </div>
+
+              <button type="submit" class="btn-primary full-width">
+                <i class="fa-solid fa-floppy-disk"></i> Save Profile Settings
+              </button>
+            </form>
+          </div>
+
+          <!-- Column 2: Incoming Breakdown Service Calls -->
+          <div class="card dash-card">
+            <div class="card-title flex-between">
+              <h3><i class="fa-solid fa-bell-concierge"></i> Incoming Breakdown Assistance Calls</h3>
+              <button class="btn-icon" onclick="fetchTechnicianRequests()" title="Refresh Calls">
+                <i class="fa-solid fa-arrows-rotate"></i>
+              </button>
+            </div>
+
+            <div id="tech-requests-list" class="requests-feed">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- ========================================== -->
+  <!-- MODAL 1: USER AUTH (LOGIN / REGISTER) -->
+  <!-- ========================================== -->
+  <div id="user-auth-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeUserAuthModal()">&times;</button>
+      
+      <div class="auth-header">
+        <i class="fa-solid fa-car-side auth-icon"></i>
+        <h2>Vehicle Owner Account</h2>
+        <p>Register or login to request instant roadside assistance</p>
+      </div>
+
+      <div class="auth-toggle-btns">
+        <button id="user-modal-tab-login" class="active" onclick="toggleUserModalAuth('login')">User Login</button>
+        <button id="user-modal-tab-reg" onclick="toggleUserModalAuth('register')">Register New User</button>
+      </div>
+
+      <!-- User Login Form -->
+      <form id="user-login-form" onsubmit="handleUserLogin(event)">
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="user-login-email" placeholder="user@example.com" required>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="user-login-password" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn-primary full-width">
+          <i class="fa-solid fa-right-to-bracket"></i> Login
+        </button>
+        <p class="demo-hint"><i class="fa-solid fa-lightbulb"></i> Demo User: <code>user@example.com</code> / <code>user123</code></p>
+      </form>
+
+      <!-- User Register Form -->
+      <form id="user-register-form" class="hidden" onsubmit="handleUserRegister(event)">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" id="user-reg-name" placeholder="Amit Patel" required>
+        </div>
+        <div class="form-group">
+          <label>Email Address *</label>
+          <input type="email" id="user-reg-email" placeholder="amit@example.com" required>
+        </div>
+        <div class="form-group">
+          <label>Password *</label>
+          <input type="password" id="user-reg-password" placeholder="••••••••" required>
+        </div>
+        <div class="form-group">
+          <label>Phone Number *</label>
+          <input type="text" id="user-reg-phone" placeholder="+91 91234 56789" required>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label>Vehicle Make</label>
+            <input type="text" id="user-reg-make" placeholder="Hyundai">
+          </div>
+          <div class="form-group">
+            <label>Vehicle Model</label>
+            <input type="text" id="user-reg-model" placeholder="Creta">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Vehicle Category</label>
+          <select id="user-reg-vehicletype">
+            <option value="Car / Sedan / SUV">🚗 Car / Sedan / SUV</option>
+            <option value="2-Wheeler">🏍️ 2-Wheeler</option>
+            <option value="Truck / Bus">🚚 Truck / Bus</option>
+            <option value="Electric Vehicle (EV)">⚡ Electric Vehicle (EV)</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary full-width">
+          <i class="fa-solid fa-user-plus"></i> Create User Account
+        </button>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- MODAL 2: REQUEST ASSISTANCE CONFIRMATION -->
+  <!-- ========================================== -->
+  <div id="request-assistance-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeRequestModal()">&times;</button>
+      
+      <div class="auth-header">
+        <i class="fa-solid fa-hand-holding-hand auth-icon"></i>
+        <h2>Confirm Roadside Breakdown Call</h2>
+        <p>Send emergency dispatch details to technician</p>
+      </div>
+
+      <div class="request-summary-box" id="request-summary-box">
+        <!-- Rendered dynamically with technician details -->
+      </div>
+
+      <form id="submit-request-form" onsubmit="handleSendAssistanceRequest(event)">
+        <input type="hidden" id="req-tech-id">
+
+        <div class="form-group">
+          <label><i class="fa-solid fa-triangle-exclamation"></i> What Issue are you Facing?</label>
+          <select id="req-problem-type" required>
+            <option value="Engine Failure / Won't Start">Engine Failure / Won't Start</option>
+            <option value="Flat Tire / Tire Burst">Flat Tire / Tire Burst</option>
+            <option value="Dead Battery / Jumpstart Needed">Dead Battery / Jumpstart Needed</option>
+            <option value="Out of Fuel / Gas Emergency">Out of Fuel / Gas Emergency</option>
+            <option value="Towing / Breakdown Recovery Needed">Towing / Breakdown Recovery Needed</option>
+            <option value="Brake / Clutch Malfunction">Brake / Clutch Malfunction</option>
+            <option value="Locked Keys Inside Vehicle">Locked Keys Inside Vehicle</option>
+            <option value="EV Battery Depleted / Diagnostic Error">EV Battery Depleted / Diagnostic Error</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Additional Notes / Landmarks for Mechanic</label>
+          <textarea id="req-notes" rows="3" placeholder="e.g. White Creta parked near Metro Pillar 42, hazard lights on..."></textarea>
+        </div>
+
+        <button type="submit" class="btn-danger full-width btn-lg">
+          <i class="fa-solid fa-paper-plane"></i> Dispatch Assistance Call Now
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
