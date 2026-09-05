@@ -428,7 +428,7 @@ body {
     background: radial-gradient(circle at top right, rgba(0,240,255,0.1), transparent 50%);
 }
 
-.service-card:hover::before{
+service-card::hover::before{
     opacity: 1;
 }
 

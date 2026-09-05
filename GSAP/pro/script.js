@@ -155,7 +155,7 @@ gsap.from('.about-visual',{
 
 const servicesSection = document.querySelector('.services');
 const servicesTrack = document.querySelector('.services-track');
-const serviceCards = document.querySelectorAll('.service-card');
+const serviceCards = document.querySelectorAll('service-card');
 
 
 const getScrollAmount = () => {
@@ -167,30 +167,30 @@ gsap.to(servicesTrack, {
     x: getScrollAmount,
     ease: 'none',
     scrollTrigger:{
-        trigger: servicesSection,
-        start: 'top top',
-        end: () => `+=${servicesTrack.scrollWidth}`,
-        pin: true,
-        scrub: 1,
-        invalidateOnRefresh: true,
+        trigger:servicesSection ,
+        start: 'top top' ,
+        end: () => '+=${servicesTrack.scrollWidth}',
+        pin: true ,
+        scrub: 1 ,
+        invalidateOnRefresh : true ,
         anticipatePin: 1 
 
     }
 });
 
 
-serviceCards.forEach((card, i) => {
-    gsap.from(card, {
+serviceCards.forEach((card,i) => {
+    gsap.from(card,{
         opacity: 0,
         y: 100,
         rotation: 5,
         duration: 1,
         scrollTrigger:{
-          trigger: card,
+          trigger: servicesSection,
           start: 'top 80%', 
           toggleActions: 'play none none reverse'
         },
-        delay: i * 0.1
+        delay: i*0.1
     });
 });
 
